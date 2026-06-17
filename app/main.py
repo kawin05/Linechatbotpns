@@ -12,7 +12,7 @@ from app.handlers.router import route_message
 
 limiter = Limiter(key_func=get_remote_address)
 
-app = FastAPI(title=settings.PROJECT_NAME)
+app = FastAPI(title=settings.PROJECT_NAME, redirect_slashes=False)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
@@ -57,6 +57,13 @@ async def line_webhook(request: Request):
             log_message(user_id, user_text, reply_text)
 
     return JSONResponse(content={"status": "ok"})
+
+
+@app.post("/webhook/")
+@limiter.limit("30/minute")
+async def line_webhook_slash(request: Request):
+    """LINE webhook entry point (with trailing slash)."""
+    return await line_webhook(request)
 
 
 @app.post("/alert-check")
