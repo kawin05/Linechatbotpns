@@ -5,13 +5,14 @@ from linebot.v3.messaging import (
     Configuration, ApiClient, MessagingApi,
     ReplyMessageRequest, TextMessage, PushMessageRequest
 )
+from linebot.v3.messaging import ApiException
 from app.config import settings
 
 configuration = Configuration(access_token=settings.LINE_CHANNEL_ACCESS_TOKEN)
 
 
 def verify_signature(body: bytes, signature: str | None) -> bool:
-    """Verify LINE webhook signature."""
+    """Verify LINE webhook signature using HMAC-SHA256."""
     if not signature:
         return False
     hash_digest = hmac.new(
@@ -23,37 +24,31 @@ def verify_signature(body: bytes, signature: str | None) -> bool:
     return hmac.compare_digest(computed, signature)
 
 
-def reply_message(reply_token: str, text: str):
-    """Reply to a LINE message."""
-    with ApiClient(configuration) as api_client:
-        line_bot_api = MessagingApi(api_client)
-        line_bot_api.reply_message(
-            ReplyMessageRequest(
-                reply_token=reply_token,
-                messages=[TextMessage(text=text)]
+def reply_message(reply_token: str, text: str) -> None:
+    """Reply to a LINE message by reply token."""
+    try:
+        with ApiClient(configuration) as api_client:
+            line_bot_api = MessagingApi(api_client)
+            line_bot_api.reply_message(
+                ReplyMessageRequest(
+                    reply_token=reply_token,
+                    messages=[TextMessage(text=text)]
+                )
             )
-        )
+    except ApiException as e:
+        print(f"[line_bot] reply_message error: {e}")
 
 
-def push_message(user_id: str, text: str):
-    """Send a push message to a specific LINE user."""
-    with ApiClient(configuration) as api_client:
-        line_bot_api = MessagingApi(api_client)
-        line_bot_api.push_message(
-            PushMessageRequest(
-                to=user_id,
-                messages=[TextMessage(text=text)]
+def push_message(to_id: str, text: str) -> None:
+    """Send a push message to a LINE user or group by ID."""
+    try:
+        with ApiClient(configuration) as api_client:
+            line_bot_api = MessagingApi(api_client)
+            line_bot_api.push_message(
+                PushMessageRequest(
+                    to=to_id,
+                    messages=[TextMessage(text=text)]
+                )
             )
-        )
-
-
-def push_group_message(group_id: str, text: str):
-    """Send a message to a LINE group."""
-    with ApiClient(configuration) as api_client:
-        line_bot_api = MessagingApi(api_client)
-        line_bot_api.push_message(
-            PushMessageRequest(
-                to=group_id,
-                messages=[TextMessage(text=text)]
-            )
-        )
+    except ApiException as e:
+        print(f"[line_bot] push_message error: {e}")
