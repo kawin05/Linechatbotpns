@@ -1,0 +1,10 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic-settings==2.7.1
+supabase==2.9.0
+line-bot-sdk==3.14.0
+google-api-python-client==2.161.0
+google-auth-httplib2==0.2.0
+google-auth-oauthlib==1.2.1
+slowapi==0.1.9
+python-dotenv==1.0.1
