@@ -18,8 +18,8 @@ class Settings(BaseSettings):
 
     # LLM Fallback (optional)
     LLM_API_KEY: str = ""
-    LLM_MODEL: str = "gpt-4o-mini"
-    LLM_PROVIDER: str = "openai"  # openai | anthropic
+    LLM_BASE_URL: str = "https://opencode.ai/zen/go/v1"
+    LLM_MODEL: str = "deepseek-v4-flash"
 
     # App
     PROJECT_NAME: str = "LINE Team Bot"
