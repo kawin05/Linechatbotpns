@@ -32,7 +32,11 @@ async def line_webhook(request: Request):
     if not verify_signature(body, signature):
         raise HTTPException(status_code=401, detail="Invalid signature")
 
-    payload = json.loads(body)
+    try:
+        payload = json.loads(body)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON body")
+
     events = payload.get("events", [])
 
     for event in events:
