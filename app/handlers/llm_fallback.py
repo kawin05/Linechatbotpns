@@ -34,7 +34,7 @@ def handle_fallback(text: str) -> str:
             max_tokens=200,
             temperature=0.7,
         )
-        return response.choices[0].message.content or ""
+        return response.choices[0].message.content or "ขอโทษค่ะ ไม่เข้าใจ กรุณาลองถามใหม่นะคะ"
     except Exception as e:
         print(f"[llm] API error: {e}")
         return "ขอโทษค่ะ เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง"
