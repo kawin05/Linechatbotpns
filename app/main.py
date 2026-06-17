@@ -1,5 +1,5 @@
 import json
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -17,6 +17,25 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
+async def process_line_event(event: dict):
+    """Process a LINE event in the background."""
+    event_type = event.get("type")
+    if event_type != "message":
+        return
+
+    message = event.get("message", {})
+    message_type = message.get("type")
+    reply_token = event.get("replyToken")
+    user_id = event.get("source", {}).get("userId")
+    group_id = event.get("source", {}).get("groupId")
+
+    if message_type == "text":
+        user_text = message.get("text", "")
+        reply_text = route_message(user_text, group_id)
+        reply_message(reply_token, reply_text)
+        log_message(user_id, user_text, reply_text)
+
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
@@ -24,8 +43,8 @@ async def health():
 
 @app.post("/webhook")
 @limiter.limit("30/minute")
-async def line_webhook(request: Request):
-    """LINE webhook entry point."""
+async def line_webhook(request: Request, background_tasks: BackgroundTasks):
+    """LINE webhook entry point. Returns immediately, processes in background."""
     body = await request.body()
 
     signature = request.headers.get("X-Line-Signature")
@@ -37,24 +56,8 @@ async def line_webhook(request: Request):
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="Invalid JSON body")
 
-    events = payload.get("events", [])
-
-    for event in events:
-        event_type = event.get("type")
-        if event_type != "message":
-            continue
-
-        message = event.get("message", {})
-        message_type = message.get("type")
-        reply_token = event.get("replyToken")
-        user_id = event.get("source", {}).get("userId")
-        group_id = event.get("source", {}).get("groupId")
-
-        if message_type == "text":
-            user_text = message.get("text", "")
-            reply_text = route_message(user_text, group_id)
-            reply_message(reply_token, reply_text)
-            log_message(user_id, user_text, reply_text)
+    for event in payload.get("events", []):
+        background_tasks.add_task(process_line_event, event)
 
     return JSONResponse(content={"status": "ok"})
 

@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     # LLM Fallback (optional)
     LLM_API_KEY: str = ""
     LLM_BASE_URL: str = "https://opencode.ai/zen/go/v1"
-    LLM_MODEL: str = "mimo-v2.5"
+    LLM_MODEL: str = "deepseek-v4-flash"
 
     # App
     PROJECT_NAME: str = "LINE Team Bot"
