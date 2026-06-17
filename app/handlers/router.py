@@ -7,7 +7,7 @@ from app.handlers.help import handle_help
 from app.handlers.llm_fallback import handle_fallback
 
 
-def route_message(text: str, group_id: str | None = None) -> str:
+def route_message(text: str, group_id: str | None = None, user_id: str | None = None) -> str:
     """Route a text message to the appropriate handler."""
     text = text.strip()
 
@@ -24,4 +24,4 @@ def route_message(text: str, group_id: str | None = None) -> str:
     elif text == "help":
         return handle_help()
     else:
-        return handle_fallback(text)
+        return handle_fallback(text, user_id or "")

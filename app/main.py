@@ -52,7 +52,7 @@ async def line_webhook(request: Request):
 
         if message_type == "text":
             user_text = message.get("text", "")
-            reply_text = route_message(user_text, group_id)
+            reply_text = route_message(user_text, group_id, user_id)
             reply_message(reply_token, reply_text)
             try:
                 log_message(user_id, user_text, reply_text)
