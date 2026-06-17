@@ -17,7 +17,7 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
-async def process_line_event(event: dict):
+def process_line_event(event: dict):
     """Process a LINE event in the background."""
     event_type = event.get("type")
     if event_type != "message":
