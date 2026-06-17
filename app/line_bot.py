@@ -24,8 +24,8 @@ def verify_signature(body: bytes, signature: str | None) -> bool:
     return hmac.compare_digest(computed, signature)
 
 
-def reply_message(reply_token: str, text: str) -> None:
-    """Reply to a LINE message by reply token."""
+def reply_message(reply_token: str, text: str) -> bool:
+    """Reply to a LINE message by reply token. Returns True on success."""
     try:
         with ApiClient(configuration) as api_client:
             line_bot_api = MessagingApi(api_client)
@@ -35,12 +35,14 @@ def reply_message(reply_token: str, text: str) -> None:
                     messages=[TextMessage(text=text)]
                 )
             )
+        return True
     except ApiException as e:
         print(f"[line_bot] reply_message error: {e}")
+        return False
 
 
-def push_message(to_id: str, text: str) -> None:
-    """Send a push message to a LINE user or group by ID."""
+def push_message(to_id: str, text: str) -> bool:
+    """Push a message to a LINE user or group. Returns True on success."""
     try:
         with ApiClient(configuration) as api_client:
             line_bot_api = MessagingApi(api_client)
@@ -50,5 +52,7 @@ def push_message(to_id: str, text: str) -> None:
                     messages=[TextMessage(text=text)]
                 )
             )
+        return True
     except ApiException as e:
         print(f"[line_bot] push_message error: {e}")
+        return False

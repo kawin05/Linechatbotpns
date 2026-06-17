@@ -8,4 +8,6 @@ def handle_stock(text: str) -> str:
     if not match:
         return "ใช้คำสั่ง: stock [ชื่อสินค้า] เช่น stock แป้งผีเสื้อ"
     product = match.group(1).strip()
+    if not product:
+        return "ใช้คำสั่ง: stock [ชื่อสินค้า] เช่น stock แป้งผีเสื้อ"
     return get_stock(product)

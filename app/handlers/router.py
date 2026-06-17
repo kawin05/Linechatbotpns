@@ -19,7 +19,7 @@ def route_message(text: str, group_id: str | None = None) -> str:
         return handle_stock(text)
     elif text == "ออเดอร์วันนี้":
         return handle_orders_today()
-    elif text.startswith("/send"):
+    elif text == "/send" or text.startswith("/send "):
         return handle_send(text, group_id)
     elif text == "help":
         return handle_help()
