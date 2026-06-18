@@ -1,4 +1,5 @@
 import json
+import time
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -26,16 +27,21 @@ async def health():
 @limiter.limit("30/minute")
 async def line_webhook(request: Request):
     """LINE webhook entry point."""
+    t0 = time.perf_counter()
+
     body = await request.body()
+    t1 = time.perf_counter()
 
     signature = request.headers.get("X-Line-Signature")
     if not verify_signature(body, signature):
         raise HTTPException(status_code=401, detail="Invalid signature")
+    t2 = time.perf_counter()
 
     try:
         payload = json.loads(body)
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="Invalid JSON body")
+    t3 = time.perf_counter()
 
     events = payload.get("events", [])
 
@@ -52,12 +58,29 @@ async def line_webhook(request: Request):
 
         if message_type == "text":
             user_text = message.get("text", "")
+            t4 = time.perf_counter()
             reply_text = route_message(user_text, group_id, user_id)
+            t5 = time.perf_counter()
             reply_message(reply_token, reply_text)
+            t6 = time.perf_counter()
             try:
                 log_message(user_id, user_text, reply_text)
             except Exception:
-                pass  # Supabase not configured yet
+                pass
+            t7 = time.perf_counter()
+
+            print(
+                f"[TIMING] read_body={t1-t0:.3f}s  "
+                f"verify_sig={t2-t1:.3f}s  "
+                f"parse_json={t3-t2:.3f}s  "
+                f"route+handler={t5-t4:.3f}s  "
+                f"line_reply={t6-t5:.3f}s  "
+                f"supabase_log={t7-t6:.3f}s  "
+                f"total={t7-t0:.3f}s  "
+                f"cmd={user_text[:30]}  "
+                f"groupId={group_id or 'none'}  "
+                f"userId={user_id or 'none'}"
+            )
 
     return JSONResponse(content={"status": "ok"})
 
