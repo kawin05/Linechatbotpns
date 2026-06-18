@@ -11,6 +11,9 @@ from app.line_bot import verify_signature, reply_message
 from app.database import log_message
 from app.handlers.router import route_message
 
+# Temp: capture group IDs for setup
+_last_events = []
+
 limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(title=settings.PROJECT_NAME, redirect_slashes=False)
@@ -55,6 +58,12 @@ async def line_webhook(request: Request):
         reply_token = event.get("replyToken")
         user_id = event.get("source", {}).get("userId")
         group_id = event.get("source", {}).get("groupId")
+        source_type = event.get("source", {}).get("type")
+
+        # Temp: capture event for debug
+        _last_events.append({"sourceType": source_type, "groupId": group_id, "userId": user_id, "ts": time.time()})
+        if len(_last_events) > 20:
+            _last_events.pop(0)
 
         if message_type == "text":
             user_text = message.get("text", "")
@@ -97,3 +106,9 @@ async def line_webhook_slash(request: Request):
 async def alert_check(request: Request):
     """Endpoint called by Hermes cron to evaluate alert thresholds."""
     return JSONResponse(content={"status": "checked", "alerts": []})
+
+
+@app.get("/debug/group-ids")
+async def debug_group_ids():
+    """TEMP: show last seen group/user IDs for setup."""
+    return JSONResponse(content={"events": _last_events})
